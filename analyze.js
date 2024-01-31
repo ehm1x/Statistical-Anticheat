@@ -1,87 +1,63 @@
-const fs = require('fs');
-const path = require('path')
-// Function to calculate mean
+const fs = require('fs').promises;
+const path = require('path');
+const math = require('mathjs');
 
+async function main() {
+  const filePath = path.join('C:/Players', 'players.json');
+  const analyticsFilePath = path.join('C:/Players', 'analytics.json');
 
-function calculateMean(data) {
-  return data.reduce((sum, value) => sum + value, 0) / data.length;
+  try {
+    const playersData = JSON.parse(await fs.readFile(filePath, 'utf-8'));
+    const stats = {
+      headshotPercentages: [],
+      kds: [],
+      winPercentages: [],
+      firstBloods: [],
+      avgPositions: []
+    };
+
+    // Populate arrays with player stats
+    playersData.forEach(player => {
+      const competitive_stats = player.competitive_stats;
+
+      // Check if competitive_stats exists and has the properties we're interested in
+      if(competitive_stats && typeof competitive_stats === 'object') {
+        if('headshot_percentage' in competitive_stats) stats.headshotPercentages.push(competitive_stats.headshot_percentage);
+        if('kd' in competitive_stats) stats.kds.push(competitive_stats.kd);
+        if('win_percentage' in competitive_stats) stats.winPercentages.push(competitive_stats.win_percentage);
+        if('first_bloods' in competitive_stats && 'rounds_played' in competitive_stats) stats.firstBloods.push(competitive_stats.first_bloods / competitive_stats.rounds_played);
+        if('avg_position' in competitive_stats) stats.avgPositions.push(competitive_stats.avg_position);
+      }
+    });
+
+    // Calculate means and standard deviations
+    const means = {};
+    const standardDeviations = {};
+    for (const key in stats) {
+      means[key] = math.mean(stats[key]);
+      standardDeviations[key] = math.std(stats[key]);
+    }
+
+    // Calculate z-scores and update player data
+    playersData.forEach(player => {
+      const competitive_stats = player.competitive_stats;
+
+      // Again, check if competitive_stats exists before attempting to use its properties
+      if(competitive_stats && typeof competitive_stats === 'object') {
+        if('headshot_percentage' in competitive_stats) competitive_stats.z_score_headshotPercentage = (competitive_stats.headshot_percentage - means.headshotPercentages) / standardDeviations.headshotPercentages;
+        if('kd' in competitive_stats) competitive_stats.z_score_kd = (competitive_stats.kd - means.kds) / standardDeviations.kds;
+        if('win_percentage' in competitive_stats) competitive_stats.z_score_winPercentage = (competitive_stats.win_percentage - means.winPercentages) / standardDeviations.winPercentages;
+        if('first_bloods' in competitive_stats && 'rounds_played' in competitive_stats) competitive_stats.z_score_firstBloods = ((competitive_stats.first_bloods / competitive_stats.rounds_played) - means.firstBloods) / standardDeviations.firstBloods;
+        if('avg_position' in competitive_stats) competitive_stats.z_score_avgPosition = (competitive_stats.avg_position - means.avgPositions) / standardDeviations.avgPositions;
+      }
+    });
+    
+    await fs.writeFile(filePath, JSON.stringify(playersData, null, 2));
+    await fs.writeFile(analyticsFilePath, JSON.stringify({ means, standardDeviations }, null, 2));
+    console.log('Player statistics updated and saved.');
+  } catch (error) {
+    console.error('An error occurred:', error.message);
+  }
 }
 
-// Function to calculate variance
-function calculateVariance(data, mean) {
-  return data.reduce((sum, value) => sum + (value - mean) ** 2, 0) / data.length;
-}
-
-// Function to calculate standard deviation
-function calculateStandardDeviation(variance) {
-  return Math.sqrt(variance);
-}
-
-// Load player data
-const filePath = 'C:/Players/players.json';
-const analyticsFilePath = path.join('C:/Players', 'analytics.json');
-const playersData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-
-
-// Initialize arrays to hold stats data
-const headshotPercentages = [];
-const kds = [];
-const winPercentages = [];
-const firstBloods = [];
-const avgPositions = [];
-
-// Populate arrays with player stats
-playersData.forEach(player => {
-  headshotPercentages.push(player.competitive_stats.headshot_percentage);
-  kds.push(player.competitive_stats.kd);
-  winPercentages.push(player.competitive_stats.win_percentage);
-  firstBloods.push(player.competitive_stats.first_bloods / player.competitive_stats.rounds_played);
-  avgPositions.push(player.competitive_stats.avg_position);
-});
-
-// Calculate means
-const means = {
-  mean_headshotPercentage: calculateMean(headshotPercentages),
-  mean_kd: calculateMean(kds),
-  mean_winPercentage: calculateMean(winPercentages),
-  mean_firstBloods: calculateMean(firstBloods),
-  mean_avgPosition: calculateMean(avgPositions),
-};
-
-// Calculate variances and standard deviations
-const variances = {
-  variance_headshotPercentage: calculateVariance(headshotPercentages, means.mean_headshotPercentage),
-  variance_kd: calculateVariance(kds, means.mean_kd),
-  variance_winPercentage: calculateVariance(winPercentages, means.mean_winPercentage),
-  variance_firstBloods: calculateVariance(firstBloods, means.mean_firstBloods),
-  variance_avgPosition: calculateVariance(avgPositions, means.mean_avgPosition),
-};
-
-const standardDeviations = {
-  sd_headshotPercentage: calculateStandardDeviation(variances.variance_headshotPercentage),
-  sd_kd: calculateStandardDeviation(variances.variance_kd),
-  sd_winPercentage: calculateStandardDeviation(variances.variance_winPercentage),
-  sd_firstBloods: calculateStandardDeviation(variances.variance_firstBloods),
-  sd_avgPosition: calculateStandardDeviation(variances.variance_avgPosition),
-};
-
-// Calculate z-scores and update player data
-playersData.forEach(player => {
-  player.competitive_stats.z_score_headshotPercentage = (player.competitive_stats.headshot_percentage - means.mean_headshotPercentage) / standardDeviations.sd_headshotPercentage;
-  player.competitive_stats.z_score_kd = (player.competitive_stats.kd - means.mean_kd) / standardDeviations.sd_kd;
-  player.competitive_stats.z_score_winPercentage = (player.competitive_stats.win_percentage - means.mean_winPercentage) / standardDeviations.sd_winPercentage;
-  player.competitive_stats.z_score_firstBloods = ((player.competitive_stats.first_bloods /player.competitive_stats.rounds_played) - means.mean_firstBloods) / standardDeviations.sd_firstBloods; // Assuming this field exists
-  player.competitive_stats.z_score_avgPosition = (player.competitive_stats.avg_position - means.mean_avgPosition) / standardDeviations.sd_avgPosition;
-});
-
-// Add analytics to the data
-const analyticsData = {
-  means,
-  variances,
-  standardDeviations
-};
-
-// Save updated data back to file
-fs.writeFileSync(filePath, JSON.stringify(playersData, null, 2), 'utf-8');
-fs.writeFileSync(analyticsFilePath, JSON.stringify(analyticsData, null, 2), 'utf-8');
-console.log('Player statistics updated and saved.');
+main();
