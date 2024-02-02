@@ -1,9 +1,6 @@
-const express = require("express");
 const axios = require("axios");
 const fs = require("fs").promises;
-const path = require("path");
-const app = express();
-const PORT = 3000;
+
 
 let success = 0;
 let fail = 0;
@@ -104,10 +101,6 @@ async function getPlayerData(Index) {
   }
 }
 
-app.get("/collect-players", async (req, res) => {
-  await getPlayerData();
-  res.send("Player data collection initiated.");
-});
 //riot api maxes at 200 players, this places multiple request of size 200
 async function GetPlayerGrouping() {
   for (let i = 0; i < 5; i++) {
@@ -116,6 +109,4 @@ async function GetPlayerGrouping() {
 }
 GetPlayerGrouping();
 
-app.listen(PORT, "127.0.0.1", () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
