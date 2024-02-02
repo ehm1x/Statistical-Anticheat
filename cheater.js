@@ -168,5 +168,5 @@ function playerHasValidStats(player) {
 }
 
 const formatNumber = (value, digits = 2) => {
-  return value !== null && value !== undefined ? value.toFixed(digits) : 'N/A';
+  return typeof value === 'number' ? value.toFixed(digits) : 'N/A';
 };
