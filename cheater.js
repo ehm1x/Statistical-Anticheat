@@ -59,25 +59,25 @@ async function main() {
     }
 
     playersData.forEach(player => {
-      const { competitive_stats } = player;
-      if (competitive_stats) {
-        if (typeof competitive_stats.headshot_percentage === 'number') {
-          competitive_stats.z_score_headshotPercentage = (competitive_stats.headshot_percentage - means.headshotPercentages) / standardDeviations.headshotPercentages;
+      const { competitive_stats: stats } = player; //rename competitive_stats to stats for bettre readability
+      if (stats) {
+        if (typeof stats.headshot_percentage === 'number') {
+          stats.z_score_headshotPercentage = (stats.headshot_percentage - means.headshotPercentages) / standardDeviations.headshotPercentages;
         }
-        if (typeof competitive_stats.kd === 'number') {
-          competitive_stats.z_score_kd = (competitive_stats.kd - means.kds) / standardDeviations.kds;
+        if (typeof stats.kd === 'number') {
+          stats.z_score_kd = (stats.kd - means.kds) / standardDeviations.kds;
         }
-        if (typeof competitive_stats.win_percentage === 'number') {
-          competitive_stats.z_score_winPercentage = (competitive_stats.win_percentage - means.winPercentages) / standardDeviations.winPercentages;
+        if (typeof stats.win_percentage === 'number') {
+          stats.z_score_winPercentage = (stats.win_percentage - means.winPercentages) / standardDeviations.winPercentages;
         }
-        if (typeof competitive_stats.first_bloods === 'number' && typeof competitive_stats.rounds_played === 'number') {
-          competitive_stats.z_score_firstBloods = ((competitive_stats.first_bloods / competitive_stats.rounds_played) - means.firstBloods) / standardDeviations.firstBloods;
+        if (typeof stats.first_bloods === 'number' && typeof stats.rounds_played === 'number') {
+          stats.z_score_firstBloods = ((stats.first_bloods / stats.rounds_played) - means.firstBloods) / standardDeviations.firstBloods;
         }
-        if (typeof competitive_stats.avg_position === 'number') {
-          competitive_stats.z_score_avgPosition = (competitive_stats.avg_position - means.avgPositions) / standardDeviations.avgPositions;
+        if (typeof stats.avg_position === 'number') {
+          stats.z_score_avgPosition = (stats.avg_position - means.avgPositions) / standardDeviations.avgPositions;
         }
-  
-        competitive_stats.cheater_score = calculateTotalCheaterScore(competitive_stats);
+    
+        stats.cheater_score = calculateTotalCheaterScore(stats);
       }
     });
 
