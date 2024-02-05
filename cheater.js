@@ -34,11 +34,20 @@ async function main() {
     playersData.forEach(player => {
       const { competitive_stats } = player;
       if (competitive_stats) {
-        if (typeof competitive_stats.headshot_percentage === 'number') stats.headshotPercentages.push(competitive_stats.headshot_percentage);
-        if (typeof competitive_stats.kd === 'number') stats.kds.push(competitive_stats.kd);
-        if (typeof competitive_stats.win_percentage === 'number') stats.winPercentages.push(competitive_stats.win_percentage);
-        if (typeof competitive_stats.first_bloods === 'number' && typeof competitive_stats.rounds_played === 'number') stats.firstBloods.push(competitive_stats.first_bloods / competitive_stats.rounds_played);
-        if (typeof competitive_stats.avg_position === 'number') stats.avgPositions.push(competitive_stats.avg_position);
+        if (typeof competitive_stats.headshot_percentage === 'number') 
+        stats.headshotPercentages.push(competitive_stats.headshot_percentage);
+
+        if (typeof competitive_stats.kd === 'number') 
+        stats.kds.push(competitive_stats.kd);
+
+        if (typeof competitive_stats.win_percentage === 'number')
+         stats.winPercentages.push(competitive_stats.win_percentage);
+
+        if (typeof competitive_stats.first_bloods === 'number' && typeof competitive_stats.rounds_played === 'number')
+         stats.firstBloods.push(competitive_stats.first_bloods / competitive_stats.rounds_played);
+
+        if (typeof competitive_stats.avg_position === 'number') 
+        stats.avgPositions.push(competitive_stats.avg_position);
       }
     });
 
